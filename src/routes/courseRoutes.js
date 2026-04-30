@@ -660,6 +660,28 @@ router.patch(
 
 /**
  * @openapi
+ * /api/courses/slug/{slug}/full:
+ *   get:
+ *     tags: [Courses]
+ *     summary: Get course with nested modules and lessons by slug
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Full course content fetched successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Course not found
+ */
+router.get('/courses/slug/:slug/full', courseController.getCourseFullBySlug);
+
+/**
+ * @openapi
  * /api/courses/{id}/full:
  *   get:
  *     tags: [Courses]

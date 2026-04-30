@@ -169,6 +169,12 @@ Required fields:
 - Returns one course with nested modules and nested lessons.
 - Intended for complete content fetching in one request.
 
+### GET /api/courses/slug/:slug/full
+
+- Public endpoint.
+- Returns one published course with nested modules and nested lessons by slug.
+- Intended for direct user route rendering where frontend uses course slug URLs.
+
 ## Module Endpoints
 
 ### GET /api/courses/:courseId/modules

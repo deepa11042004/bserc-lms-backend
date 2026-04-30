@@ -231,6 +231,38 @@ async function getCourseFull(courseIdValue) {
   };
 }
 
+async function getCourseFullBySlug(slugValue) {
+  const slug = normalizeText(slugValue);
+
+  if (!slug) {
+    return { status: 400, body: { message: 'Valid course slug is required.' } };
+  }
+
+  const course = await courseModel.findPublishedBySlug(slug);
+  if (!course) {
+    return { status: 404, body: { message: 'Course not found.' } };
+  }
+
+  const courseId = Number(course.id);
+  const modules = await moduleModel.listByCourseId(courseId);
+  const lessons = await lessonModel.listByCourseId(courseId);
+  const lessonsByModule = mapLessonsByModule(lessons);
+
+  const contentModules = modules.map((module) =>
+    formatModule(module, lessonsByModule.get(Number(module.id)) || [])
+  );
+
+  return {
+    status: 200,
+    body: {
+      course: {
+        ...formatCourse(course),
+        modules: contentModules,
+      },
+    },
+  };
+}
+
 async function publishCourse(courseIdValue) {
   const courseId = toNullableInteger(courseIdValue);
 
@@ -262,5 +294,6 @@ module.exports = {
   listCourses,
   createCourse,
   getCourseFull,
+  getCourseFullBySlug,
   publishCourse,
 };

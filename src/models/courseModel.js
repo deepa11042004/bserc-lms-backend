@@ -67,6 +67,39 @@ async function findBySlug(slug) {
   return rows[0] || null;
 }
 
+async function findPublishedBySlug(slug) {
+  const [rows] = await lmsDB.query(
+    `SELECT
+      id,
+      title,
+      slug,
+      subtitle,
+      description,
+      category,
+      level,
+      language,
+      thumbnail,
+      price,
+      discount_price,
+      currency,
+      is_paid,
+      lifetime_access,
+      certificate_available,
+      is_published,
+      instructor_id,
+      total_duration_minutes,
+      enrolled_students,
+      created_at,
+      updated_at
+     FROM courses
+     WHERE slug = ? AND is_published = 1
+     LIMIT 1`,
+    [slug]
+  );
+
+  return rows[0] || null;
+}
+
 async function findById(id) {
   const [rows] = await lmsDB.query(
     `SELECT
@@ -159,6 +192,7 @@ async function setPublishedStatus(id, isPublished) {
 module.exports = {
   listCourses,
   findBySlug,
+  findPublishedBySlug,
   findById,
   createCourse,
   setPublishedStatus,

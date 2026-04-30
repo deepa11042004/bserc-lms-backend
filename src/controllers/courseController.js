@@ -91,6 +91,32 @@ async function getCourseFull(req, res) {
   }
 }
 
+async function getCourseFullBySlug(req, res) {
+  try {
+    const result = await courseService.getCourseFullBySlug(req.params.slug);
+
+    if (!result.body.course) {
+      return res.status(result.status).json(result.body);
+    }
+
+    const publicCourse = {
+      ...result.body.course,
+      thumbnail: resolveThumbnailUrl(result.body.course.thumbnail, req),
+      modules: (result.body.course.modules || []).map((module) => ({
+        ...module,
+        lessons: (module.lessons || []).map((lesson) => ({ ...lesson })),
+      })),
+    };
+
+    return res.status(result.status).json({
+      course: publicCourse,
+    });
+  } catch (err) {
+    console.error('Get full course by slug error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 async function publishCourse(req, res) {
   try {
     const result = await courseService.publishCourse(req.params.id);
@@ -114,5 +140,6 @@ module.exports = {
   listAdminCourses,
   createCourse,
   getCourseFull,
+  getCourseFullBySlug,
   publishCourse,
 };
