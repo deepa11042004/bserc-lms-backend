@@ -1,6 +1,9 @@
 const courseModel = require('../models/courseModel');
 const moduleModel = require('../models/moduleModel');
 const lessonModel = require('../models/lessonModel');
+const userModel = require('../models/userModel');
+const instructorProfileModel = require('../models/instructorProfileModel');
+const roles = require('../constants/roles');
 
 const ALLOWED_LEVELS = new Set(['Beginner', 'Intermediate', 'Advanced']);
 
@@ -96,6 +99,34 @@ const mapLessonsByModule = (lessons) => {
   return grouped;
 };
 
+async function buildInstructorProfileById(instructorIdValue) {
+  const instructorId = toNullableInteger(instructorIdValue);
+
+  if (!Number.isInteger(instructorId) || instructorId <= 0) {
+    return null;
+  }
+
+  const user = await userModel.findById(instructorId);
+  const profileRow = await instructorProfileModel.findByUserId(instructorId);
+
+  if (!user && !profileRow) {
+    return null;
+  }
+
+  const name = normalizeText(profileRow?.display_name || user?.full_name || `Instructor #${instructorId}`);
+  const designation = normalizeText(profileRow?.designation || 'Instructor');
+  const shortBio = normalizeText(profileRow?.bio || '');
+  const description = normalizeText(profileRow?.profile_description || shortBio);
+
+  return {
+    id: instructorId,
+    name,
+    designation,
+    short_bio: shortBio || null,
+    description: description || null,
+  };
+}
+
 async function listCourses(options = {}) {
   const rows = await courseModel.listCourses({
     includeUnpublished: Boolean(options.includeUnpublished),
@@ -143,6 +174,11 @@ async function createCourse(payload = {}) {
 
   if (!Number.isInteger(instructorId) || instructorId <= 0) {
     return { status: 400, body: { message: 'Valid instructor_id is required.' } };
+  }
+
+  const instructorUser = await userModel.findById(instructorId);
+  if (!instructorUser || instructorUser.role !== roles.INSTRUCTOR || Number(instructorUser.is_active) !== 1) {
+    return { status: 400, body: { message: 'instructor_id must reference an active instructor user.' } };
   }
 
   if (!Number.isFinite(duration) || duration < 0) {
@@ -214,6 +250,7 @@ async function getCourseFull(courseIdValue) {
 
   const modules = await moduleModel.listByCourseId(courseId);
   const lessons = await lessonModel.listByCourseId(courseId);
+  const instructorProfile = await buildInstructorProfileById(course.instructor_id);
   const lessonsByModule = mapLessonsByModule(lessons);
 
   const contentModules = modules.map((module) =>
@@ -225,6 +262,7 @@ async function getCourseFull(courseIdValue) {
     body: {
       course: {
         ...formatCourse(course),
+        instructor_profile: instructorProfile,
         modules: contentModules,
       },
     },
@@ -246,6 +284,7 @@ async function getCourseFullBySlug(slugValue) {
   const courseId = Number(course.id);
   const modules = await moduleModel.listByCourseId(courseId);
   const lessons = await lessonModel.listByCourseId(courseId);
+  const instructorProfile = await buildInstructorProfileById(course.instructor_id);
   const lessonsByModule = mapLessonsByModule(lessons);
 
   const contentModules = modules.map((module) =>
@@ -257,6 +296,7 @@ async function getCourseFullBySlug(slugValue) {
     body: {
       course: {
         ...formatCourse(course),
+        instructor_profile: instructorProfile,
         modules: contentModules,
       },
     },

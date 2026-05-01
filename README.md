@@ -20,6 +20,7 @@ LMS backend API with role-based authentication and course content management for
   - courses (includes is_published draft/publish flag)
   - modules (FK course_id -> courses.id, ON DELETE CASCADE)
   - lessons (FK module_id -> modules.id, ON DELETE CASCADE)
+  - instructor_profiles (dashboard profile metadata for admin/instructor accounts)
 
 ## Migration (Required)
 
@@ -28,11 +29,13 @@ Run these SQL files on lms_core_db:
 ```bash
 mysql -u root -p < sql/001_create_modules_lessons.sql
 mysql -u root -p < sql/002_add_course_is_published.sql
+mysql -u root -p < sql/003_create_instructor_profiles.sql
 ```
 
 Migration file:
 - sql/001_create_modules_lessons.sql
 - sql/002_add_course_is_published.sql
+- sql/003_create_instructor_profiles.sql
 
 ## Environment Variables
 
@@ -110,6 +113,56 @@ Header:
 Authorization: Bearer <jwt_token>
 ```
 
+### GET /auth/instructor-profile
+
+- Auth required.
+- Allowed roles: admin, super_admin, instructor.
+- Returns profile settings used in admin/instructor dashboard.
+
+### PUT /auth/instructor-profile
+
+- Auth required.
+- Allowed roles: admin, super_admin, instructor.
+- Upserts profile settings in lms_core_db.instructor_profiles.
+- Does not store profile images.
+
+Body:
+
+```json
+{
+  "displayName": "Jane Doe",
+  "email": "jane@example.com",
+  "designation": "Instructor",
+  "alternativeEmail": "jane.alt@example.com",
+  "bio": "A short bio",
+  "description": "Longer profile description"
+}
+```
+
+Additional DB details:
+- docs/instructor-profile-db.md
+
+### GET /auth/instructors
+
+- Auth required.
+- Allowed roles: admin, super_admin.
+- Returns active instructor users for Instructor ID dropdown in create-course UI.
+
+Response shape:
+
+```json
+{
+  "instructors": [
+    {
+      "id": 12,
+      "full_name": "Jane Doe",
+      "email": "jane@example.com",
+      "role": "instructor"
+    }
+  ]
+}
+```
+
 ### GET /auth/admin-only
 
 Allowed roles:
@@ -149,6 +202,9 @@ Required fields:
 - slug
 - instructor_id
 
+Validation note:
+- instructor_id must reference an active user with role instructor.
+
 ### POST /api/courses
 
 - Auth required.
@@ -167,12 +223,14 @@ Required fields:
 
 - Public endpoint.
 - Returns one course with nested modules and nested lessons.
+- Also includes instructor_profile resolved from instructor_id with: name, designation, short_bio, and description.
 - Intended for complete content fetching in one request.
 
 ### GET /api/courses/slug/:slug/full
 
 - Public endpoint.
 - Returns one published course with nested modules and nested lessons by slug.
+- Also includes instructor_profile resolved from instructor_id with: name, designation, short_bio, and description.
 - Intended for direct user route rendering where frontend uses course slug URLs.
 
 ## Module Endpoints

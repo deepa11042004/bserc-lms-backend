@@ -20,8 +20,22 @@ async function updateLastLogin(id) {
   await pool.query('UPDATE users SET last_login = NOW() WHERE id = ?', [id]);
 }
 
+async function listActiveInstructors() {
+  const [rows] = await pool.query(
+    `
+      SELECT id, full_name, email, role, is_active
+      FROM users
+      WHERE role = 'instructor' AND is_active = 1
+      ORDER BY full_name ASC, id ASC
+    `
+  );
+
+  return rows;
+}
+
 module.exports = {
   findByEmail,
   findById,
   updateLastLogin,
+  listActiveInstructors,
 };

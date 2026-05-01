@@ -67,6 +67,103 @@ router.get('/profile', authMiddleware, authController.profile);
 
 /**
  * @openapi
+ * /auth/instructor-profile:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get instructor/admin profile settings for dashboard
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Instructor profile fetched successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: User not found
+ */
+router.get(
+  '/instructor-profile',
+  authMiddleware,
+  requireRole(roles.ADMIN, roles.SUPER_ADMIN, roles.INSTRUCTOR),
+  authController.getInstructorProfile
+);
+
+/**
+ * @openapi
+ * /auth/instructor-profile:
+ *   put:
+ *     tags: [Auth]
+ *     summary: Update instructor/admin profile settings for dashboard
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [displayName, email, designation, alternativeEmail]
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               designation:
+ *                 type: string
+ *               alternativeEmail:
+ *                 type: string
+ *                 format: email
+ *               bio:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Instructor profile updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: User not found
+ */
+router.put(
+  '/instructor-profile',
+  authMiddleware,
+  requireRole(roles.ADMIN, roles.SUPER_ADMIN, roles.INSTRUCTOR),
+  authController.updateInstructorProfile
+);
+
+/**
+ * @openapi
+ * /auth/instructors:
+ *   get:
+ *     tags: [Auth]
+ *     summary: List active instructors for instructor_id selection in admin course creation
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Instructors fetched successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.get(
+  '/instructors',
+  authMiddleware,
+  requireRole(roles.ADMIN, roles.SUPER_ADMIN),
+  authController.listAssignableInstructors
+);
+
+/**
+ * @openapi
  * /auth/admin-only:
  *   get:
  *     tags: [Auth]

@@ -30,7 +30,50 @@ async function profile(req, res) {
   }
 }
 
+async function getInstructorProfile(req, res) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const result = await authService.getInstructorProfile(userId);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Get instructor profile error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+async function updateInstructorProfile(req, res) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const result = await authService.updateInstructorProfile(userId, req.body || {});
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Update instructor profile error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+async function listAssignableInstructors(req, res) {
+  try {
+    const result = await authService.listAssignableInstructors();
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('List assignable instructors error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 module.exports = {
   login,
   profile,
+  getInstructorProfile,
+  updateInstructorProfile,
+  listAssignableInstructors,
 };
