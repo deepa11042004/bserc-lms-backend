@@ -135,6 +135,19 @@ async function publishCourse(req, res) {
   }
 }
 
+async function listMyLearningCourses(req, res) {
+  try {
+    const userId = req.user?.userId;
+    const result = await courseService.listMyLearningCourses(userId);
+    const courses = (result.body.courses || []).map((course) => toPublicCourse(course, req));
+
+    return res.status(result.status).json({ courses });
+  } catch (err) {
+    console.error('List my learning courses error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 module.exports = {
   listCourses,
   listAdminCourses,
@@ -142,4 +155,5 @@ module.exports = {
   getCourseFull,
   getCourseFullBySlug,
   publishCourse,
+  listMyLearningCourses,
 };

@@ -1,6 +1,7 @@
 const courseModel = require('../models/courseModel');
 const moduleModel = require('../models/moduleModel');
 const lessonModel = require('../models/lessonModel');
+const enrollmentModel = require('../models/enrollmentModel');
 const userModel = require('../models/userModel');
 const instructorProfileModel = require('../models/instructorProfileModel');
 const roles = require('../constants/roles');
@@ -341,10 +342,68 @@ async function publishCourse(courseIdValue) {
   };
 }
 
+async function listMyLearningCourses(userIdValue) {
+  const userId = toNullableInteger(userIdValue);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return { status: 400, body: { message: 'Valid user id is required.' } };
+  }
+
+  const rows = await enrollmentModel.listByUserWithCourses(userId, ['active', 'completed']);
+
+  const courses = rows.map((row) => {
+    const formattedCourse = formatCourse({
+      id: row.course_id,
+      title: row.title,
+      slug: row.slug,
+      subtitle: row.subtitle,
+      description: row.description,
+      category: row.category,
+      level: row.level,
+      language: row.language,
+      thumbnail: row.thumbnail,
+      price: row.price,
+      discount_price: row.discount_price,
+      currency: row.currency,
+      is_free: row.is_free,
+      is_paid: row.is_paid,
+      lifetime_access: row.lifetime_access,
+      certificate_available: row.certificate_available,
+      is_published: row.is_published,
+      instructor_id: row.instructor_id,
+      total_duration_minutes: row.total_duration_minutes,
+      enrolled_students: row.enrolled_students,
+      created_at: row.course_created_at,
+      updated_at: row.course_updated_at,
+    });
+
+    return {
+      ...formattedCourse,
+      enrollment: {
+        id: Number(row.id),
+        user_id: Number(row.user_id),
+        course_id: Number(row.course_id),
+        status: row.status,
+        enrolled_at: row.enrolled_at,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+    };
+  });
+
+  return {
+    status: 200,
+    body: {
+      courses,
+    },
+  };
+}
+
 module.exports = {
   listCourses,
   createCourse,
   getCourseFull,
   getCourseFullBySlug,
   publishCourse,
+  listMyLearningCourses,
 };

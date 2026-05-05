@@ -66,6 +66,8 @@ async function uploadThumbnailToS3(req, res, next) {
  */
 router.get('/courses', courseController.listCourses);
 
+router.get('/my-learning/courses', authMiddleware, courseController.listMyLearningCourses);
+
 /**
  * @openapi
  * /api/courses/{courseId}/enroll:
