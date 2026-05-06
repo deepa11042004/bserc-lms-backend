@@ -137,7 +137,13 @@ async function publishCourse(req, res) {
 
 async function updateCourse(req, res) {
   try {
-    const result = await courseService.updateCourse(req.params.id, req.body || {});
+    const payload = req.body || {};
+    const thumbnail = req.uploadedThumbnail?.url || payload.thumbnail;
+
+    const result = await courseService.updateCourse(req.params.id, {
+      ...payload,
+      thumbnail,
+    });
 
     if (!result.body.course) {
       return res.status(result.status).json(result.body);

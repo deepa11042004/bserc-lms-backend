@@ -294,7 +294,7 @@ router.patch(
  * /api/admin/courses/{id}:
  *   put:
  *     tags: [Courses]
- *     summary: Update a course (title, slug, description, pricing, status, etc.)
+ *     summary: Update a course (title, slug, description, pricing, status, thumbnail, etc.)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -307,7 +307,7 @@ router.patch(
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -342,6 +342,10 @@ router.patch(
  *                 type: boolean
  *               total_duration_minutes:
  *                 type: integer
+ *               thumbnail:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional thumbnail image file to upload to S3
  *     responses:
  *       200:
  *         description: Course updated successfully
@@ -360,6 +364,8 @@ router.put(
   '/admin/courses/:id',
   authMiddleware,
   requireRole(roles.ADMIN, roles.SUPER_ADMIN, roles.INSTRUCTOR),
+  upload.single('thumbnail'),
+  uploadThumbnailToS3,
   courseController.updateCourse
 );
 

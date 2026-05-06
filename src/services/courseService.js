@@ -362,6 +362,7 @@ async function updateCourse(courseIdValue, payload = {}) {
   const level = normalizeText(payload.level || course.level);
   const language = normalizeText(payload.language || course.language);
   const currency = normalizeText(payload.currency || course.currency || 'INR').toUpperCase();
+  const thumbnail = payload.thumbnail !== undefined ? normalizeNullableText(payload.thumbnail) : course.thumbnail;
 
   if (!title) return { status: 400, body: { message: 'Title is required.' } };
   if (!slug) return { status: 400, body: { message: 'Slug is required.' } };
@@ -417,6 +418,7 @@ async function updateCourse(courseIdValue, payload = {}) {
     certificate_available: certificateAvailable ? 1 : 0,
     is_published: isPublished ? 1 : 0,
     total_duration_minutes: duration,
+    thumbnail,
   });
 
   const updated = await courseModel.findById(courseId);
