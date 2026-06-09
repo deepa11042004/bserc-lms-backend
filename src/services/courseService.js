@@ -489,6 +489,28 @@ async function listMyLearningCourses(userIdValue) {
   };
 }
 
+async function deleteCourse(courseIdValue) {
+  const courseId = toNullableInteger(courseIdValue);
+
+  if (!Number.isInteger(courseId) || courseId <= 0) {
+    return { status: 400, body: { message: 'Valid course id is required.' } };
+  }
+
+  const course = await courseModel.findById(courseId);
+  if (!course) {
+    return { status: 404, body: { message: 'Course not found.' } };
+  }
+
+  await courseModel.deleteCourse(courseId);
+
+  return {
+    status: 200,
+    body: {
+      message: 'Course deleted successfully',
+    },
+  };
+}
+
 module.exports = {
   listCourses,
   createCourse,
@@ -497,4 +519,5 @@ module.exports = {
   getCourseFullBySlug,
   publishCourse,
   listMyLearningCourses,
+  deleteCourse,
 };

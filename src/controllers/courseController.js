@@ -172,6 +172,16 @@ async function listMyLearningCourses(req, res) {
   }
 }
 
+async function deleteCourse(req, res) {
+  try {
+    const result = await courseService.deleteCourse(req.params.id);
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Delete course error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 module.exports = {
   listCourses,
   listAdminCourses,
@@ -181,4 +191,5 @@ module.exports = {
   getCourseFullBySlug,
   publishCourse,
   listMyLearningCourses,
+  deleteCourse,
 };

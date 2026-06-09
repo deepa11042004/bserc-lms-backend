@@ -255,6 +255,10 @@ async function syncEnrolledStudents(courseId, runner = lmsDB) {
   );
 }
 
+async function deleteCourse(id) {
+  await lmsDB.query(`DELETE FROM courses WHERE id = ?`, [id]);
+}
+
 module.exports = {
   listCourses,
   findBySlug,
@@ -264,4 +268,5 @@ module.exports = {
   setPublishedStatus,
   updateCourse,
   syncEnrolledStudents,
+  deleteCourse,
 };

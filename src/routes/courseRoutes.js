@@ -371,6 +371,40 @@ router.put(
 
 /**
  * @openapi
+ * /api/admin/courses/{id}:
+ *   delete:
+ *     tags: [Courses]
+ *     summary: Delete a course
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Course ID
+ *     responses:
+ *       200:
+ *         description: Course deleted successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Course not found
+ */
+router.delete(
+  '/admin/courses/:id',
+  authMiddleware,
+  requireRole(roles.ADMIN, roles.SUPER_ADMIN, roles.INSTRUCTOR),
+  courseController.deleteCourse
+);
+
+/**
+ * @openapi
  * /api/courses/{courseId}/modules:
  *   get:
  *     tags: [Modules]
