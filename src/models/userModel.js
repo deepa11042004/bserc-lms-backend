@@ -37,10 +37,19 @@ async function listActiveInstructors() {
   return rows;
 }
 
+async function create({ full_name, email, password, role = 'user' }) {
+  const [result] = await pool.query(
+    'INSERT INTO users (full_name, email, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 1, NOW(), NOW())',
+    [full_name, email, password, role]
+  );
+  return result.insertId;
+}
+
 module.exports = {
   findByEmail,
   findById,
   updateLastLogin,
   updateFullName,
   listActiveInstructors,
+  create,
 };

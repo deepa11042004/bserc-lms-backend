@@ -45,6 +45,7 @@ const router = express.Router();
  *       404:
  *         description: User not found
  */
+router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 /**

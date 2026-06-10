@@ -1,5 +1,20 @@
 const authService = require('../services/authService');
 
+async function register(req, res) {
+  try {
+    const payload = req.body || {};
+    const result = await authService.register({
+      full_name: payload.full_name,
+      email: payload.email,
+      password: payload.password,
+    });
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error('Register error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 async function login(req, res) {
   try {
     const payload = req.body || {};
@@ -86,6 +101,7 @@ async function listAssignableInstructors(req, res) {
 }
 
 module.exports = {
+  register,
   login,
   profile,
   updateProfile,

@@ -1,4 +1,4 @@
-const { comparePassword } = require('../utils/hashPassword');
+const { comparePassword, hashPassword } = require('../utils/hashPassword');
 const { signToken } = require('../utils/jwt');
 const roles = require('../constants/roles');
 const userModel = require('../models/userModel');
@@ -91,6 +91,37 @@ function mapInstructorProfile(user, profileRow) {
     bio: cleanText(profileRow?.bio || ''),
     description: cleanText(profileRow?.profile_description || ''),
     updatedAt: profileRow?.updated_at || null,
+  };
+}
+
+async function register({ full_name, email, password }) {
+  const normalizedEmail = normalizeEmail(email);
+  const cleanFullName = cleanText(full_name);
+  const cleanPass = cleanText(password);
+
+  if (!cleanFullName) {
+    return { status: 400, body: { message: 'Full name is required' } };
+  }
+
+  if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+    return { status: 400, body: { message: 'A valid email is required' } };
+  }
+
+  if (!cleanPass || cleanPass.length < 6) {
+    return { status: 400, body: { message: 'Password must be at least 6 characters' } };
+  }
+
+  const existing = await userModel.findByEmail(normalizedEmail);
+  if (existing) {
+    return { status: 409, body: { message: 'Email already registered' } };
+  }
+
+  const hashedPassword = await hashPassword(cleanPass);
+  const newUserId = await userModel.create({ full_name: cleanFullName, email: normalizedEmail, password: hashedPassword });
+
+  return {
+    status: 201,
+    body: { message: 'Registration successful', userId: newUserId },
   };
 }
 
@@ -343,6 +374,7 @@ async function listAssignableInstructors() {
 }
 
 module.exports = {
+  register,
   login,
   getProfile,
   updateProfile,
