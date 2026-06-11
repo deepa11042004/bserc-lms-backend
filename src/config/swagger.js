@@ -50,6 +50,14 @@ const options = {
         name: 'Payments',
         description: 'Payment order and verification endpoints backed by lms_core_db.payments',
       },
+      {
+        name: 'FAQs',
+        description: 'Student-facing FAQ management backed by lms_core_db.faqs',
+      },
+      {
+        name: 'Resources',
+        description: 'Course resource (file/link) management backed by lms_core_db.course_resources',
+      },
     ],
   },
   apis: ['./src/routes/*.js'],
