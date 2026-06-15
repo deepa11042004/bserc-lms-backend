@@ -1,4 +1,6 @@
 const authService = require('../services/authService');
+const { uploadAvatar, streamAvatarToResponse, deleteAvatar } = require('../utils/s3Avatar');
+const userProfileModel = require('../models/userProfileModel');
 
 async function register(req, res) {
   try {
@@ -100,11 +102,66 @@ async function listAssignableInstructors(req, res) {
   }
 }
 
+async function uploadAvatarHandler(req, res) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
+
+    // Delete old avatar from S3 if it was one we uploaded (stored as s3 key)
+    const existing = await userProfileModel.findByUserId(userId);
+    const oldKey = existing?.profile_picture_url;
+    if (oldKey && oldKey.startsWith('users/avatars/')) {
+      await deleteAvatar(oldKey).catch(() => {});
+    }
+
+    const { key } = await uploadAvatar({
+      buffer: req.file.buffer,
+      contentType: req.file.mimetype,
+      originalName: req.file.originalname,
+      userId,
+    });
+
+    // Store the S3 key (not a public URL) — served via proxy endpoint
+    await userProfileModel.upsertByUserId(userId, {
+      ...(existing || {}),
+      profile_picture_url: key,
+    });
+
+    return res.status(200).json({ s3_key: key });
+  } catch (err) {
+    console.error('Upload avatar error:', err);
+    const status = err.status || 500;
+    return res.status(status).json({ message: err.message || 'Internal server error' });
+  }
+}
+
+async function serveAvatar(req, res) {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isInteger(userId) || userId < 1)
+      return res.status(400).json({ message: 'Invalid user id.' });
+
+    const profile = await userProfileModel.findByUserId(userId);
+    const key = profile?.profile_picture_url;
+
+    if (!key || !key.startsWith('users/avatars/'))
+      return res.status(404).json({ message: 'No avatar.' });
+
+    await streamAvatarToResponse(key, res);
+  } catch (err) {
+    console.error('Serve avatar error:', err);
+    if (!res.headersSent) res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 module.exports = {
   register,
   login,
   profile,
   updateProfile,
+  uploadAvatarHandler,
+  serveAvatar,
   getInstructorProfile,
   updateInstructorProfile,
   listAssignableInstructors,

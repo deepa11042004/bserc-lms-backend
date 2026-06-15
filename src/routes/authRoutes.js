@@ -1,11 +1,14 @@
 const express = require('express');
+const multer = require('multer');
 
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/requireRole');
 const roles = require('../constants/roles');
+const { MAX_AVATAR_SIZE } = require('../utils/s3Avatar');
 
 const router = express.Router();
+const avatarUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_AVATAR_SIZE } });
 
 /**
  * @openapi
@@ -110,6 +113,8 @@ router.get('/profile', authMiddleware, authController.profile);
  *         description: User not found
  */
 router.put('/profile', authMiddleware, authController.updateProfile);
+router.post('/avatar', authMiddleware, avatarUpload.single('avatar'), authController.uploadAvatarHandler);
+router.get('/avatar/:userId', authController.serveAvatar);
 
 /**
  * @openapi
