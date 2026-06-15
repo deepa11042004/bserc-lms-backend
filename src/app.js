@@ -10,6 +10,8 @@ const courseResourceRoutes = require('./routes/courseResourceRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const recordedClassRoutes = require('./routes/recordedClassRoutes');
 const liveClassRoutes = require('./routes/liveClassRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const swaggerSpec = require('./config/swagger');
 
@@ -48,6 +50,8 @@ app.use('/api', courseResourceRoutes);
 app.use('/api', reviewRoutes);
 app.use('/api', recordedClassRoutes);
 app.use('/api', liveClassRoutes);
+app.use('/api', scheduleRoutes);
+app.use('/api', assignmentRoutes);
 
 app.use(errorHandler);
 
