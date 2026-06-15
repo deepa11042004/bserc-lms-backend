@@ -1,0 +1,4 @@
+ALTER TABLE user_profiles
+ADD COLUMN guardian_name VARCHAR(160) NULL,
+ADD COLUMN district VARCHAR(120) NULL,
+ADD COLUMN pin_code VARCHAR(20) NULL;

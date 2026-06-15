@@ -39,6 +39,9 @@ function mapUserProfileSettings(profileRow) {
     city: cleanText(profileRow?.city || ''),
     institution: cleanText(profileRow?.institution || ''),
     bio: cleanText(profileRow?.bio || ''),
+    guardian_name: cleanText(profileRow?.guardian_name || ''),
+    district: cleanText(profileRow?.district || ''),
+    pin_code: cleanText(profileRow?.pin_code || ''),
     profile_picture_url: cleanText(profileRow?.profile_picture_url || ''),
     notification_email: normalizeFlag(profileRow?.notification_email, 1),
     notification_workshop_updates: normalizeFlag(profileRow?.notification_workshop_updates, 1),
@@ -64,6 +67,9 @@ function mapUserWithProfile(user, profileRow) {
     city: profile.city,
     institution: profile.institution,
     bio: profile.bio,
+    guardian_name: profile.guardian_name,
+    district: profile.district,
+    pin_code: profile.pin_code,
     profile_picture_url: profile.profile_picture_url,
     notification_email: profile.notification_email,
     notification_workshop_updates: profile.notification_workshop_updates,
@@ -207,6 +213,11 @@ async function updateProfile(userId, payload = {}) {
   const city = getIncomingText(payload.city, existingProfile?.city);
   const institution = getIncomingText(payload.institution, existingProfile?.institution);
   const bio = getIncomingText(payload.bio, existingProfile?.bio);
+  
+  const guardianName = getIncomingText(payload.guardianName ?? payload.guardian_name, existingProfile?.guardian_name);
+  const district = getIncomingText(payload.district, existingProfile?.district);
+  const pinCode = getIncomingText(payload.pinCode ?? payload.pin_code, existingProfile?.pin_code);
+  
   const incomingProfilePicture = payload.profilePictureUrl ?? payload.profile_picture_url;
   const profilePictureUrl = getIncomingText(incomingProfilePicture, existingProfile?.profile_picture_url);
 
@@ -247,6 +258,18 @@ async function updateProfile(userId, payload = {}) {
     return { status: 400, body: { message: 'Bio cannot exceed 5000 characters.' } };
   }
 
+  if (guardianName.length > 160) {
+    return { status: 400, body: { message: 'Guardian Name cannot exceed 160 characters.' } };
+  }
+
+  if (district.length > 120) {
+    return { status: 400, body: { message: 'District cannot exceed 120 characters.' } };
+  }
+
+  if (pinCode.length > 20) {
+    return { status: 400, body: { message: 'Pin Code cannot exceed 20 characters.' } };
+  }
+
   if (profilePictureUrl.length > 2048) {
     return { status: 400, body: { message: 'Profile picture URL cannot exceed 2048 characters.' } };
   }
@@ -260,6 +283,9 @@ async function updateProfile(userId, payload = {}) {
     city: toNullableText(city),
     institution: toNullableText(institution),
     bio: toNullableText(bio),
+    guardian_name: toNullableText(guardianName),
+    district: toNullableText(district),
+    pin_code: toNullableText(pinCode),
     profile_picture_url: toNullableText(profilePictureUrl),
     notification_email: notificationEmail,
     notification_workshop_updates: notificationWorkshopUpdates,
