@@ -15,8 +15,8 @@ async function create(payload) {
   if (!payload.session_date) return { status: 400, body: { message: 'Date is required.' } };
 
   const entry = await scheduleModel.create({
-    day_number:    Number(payload.day_number) || 1,
     session_date:  payload.session_date,
+    session_time:  payload.session_time || null,
     subject,
     topic,
     display_order: Number(payload.display_order) || 0,
@@ -29,8 +29,8 @@ async function update(id, payload) {
   if (!existing) return { status: 404, body: { message: 'Entry not found.' } };
 
   const updates = {};
-  if (payload.day_number !== undefined)   updates.day_number = Number(payload.day_number) || 1;
   if (payload.session_date !== undefined) updates.session_date = payload.session_date;
+  if (payload.session_time !== undefined) updates.session_time = payload.session_time || null;
   if (payload.subject !== undefined) {
     const subject = trim(payload.subject);
     if (!subject) return { status: 400, body: { message: 'Subject is required.' } };

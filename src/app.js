@@ -12,6 +12,7 @@ const recordedClassRoutes = require('./routes/recordedClassRoutes');
 const liveClassRoutes = require('./routes/liveClassRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const swaggerSpec = require('./config/swagger');
 
@@ -52,6 +53,7 @@ app.use('/api', recordedClassRoutes);
 app.use('/api', liveClassRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api', assignmentRoutes);
+app.use('/api', announcementRoutes);
 
 app.use(errorHandler);
 
