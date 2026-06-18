@@ -1,0 +1,81 @@
+name: Deploy LMS Backend to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3️⃣ Login to Docker Hub
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 4️⃣ Remove old image (LOCAL RUNNER)
+      - name: Remove old Docker image
+        run: |
+          docker rmi ${{ secrets.DOCKER_USERNAME }}/bserc-lms-backend:latest || true
+
+      # 5️⃣ Build & Push (NO CACHE)
+      - name: Build & Push Docker image
+        run: |
+          docker buildx build \
+          --no-cache \
+          --platform linux/amd64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/bserc-lms-backend:latest \
+          --push .
+
+      # 6️⃣ Deploy to EC2
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            # Remove old container
+            docker stop lms-backend-app || true
+            docker rm lms-backend-app || true
+
+            # Remove old image from EC2
+            docker rmi ${{ secrets.DOCKER_USERNAME }}/bserc-lms-backend:latest || true
+
+            # Pull fresh image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/bserc-lms-backend:latest
+
+            # Free port 5002
+            sudo fuser -k 5002/tcp || true
+
+            # Run fresh container on port 5002
+            docker run -d -p 5002:5002 \
+            --name lms-backend-app \
+            -e PORT=5002 \
+            -e DB_HOST=${{ secrets.LMS_DB_HOST }} \
+            -e DB_PORT=${{ secrets.LMS_DB_PORT }} \
+            -e DB_USER=${{ secrets.LMS_DB_USER }} \
+            -e DB_PASSWORD=${{ secrets.LMS_DB_PASSWORD }} \
+            -e AUTH_DB_NAME=${{ secrets.LMS_AUTH_DB_NAME }} \
+            -e LMS_DB_NAME=${{ secrets.LMS_DB_NAME }} \
+            -e JWT_SECRET=${{ secrets.LMS_JWT_SECRET }} \
+            -e AWS_ACCESS_KEY_ID=${{ secrets.LMS_AWS_ACCESS_KEY_ID }} \
+            -e AWS_SECRET_ACCESS_KEY=${{ secrets.LMS_AWS_SECRET_ACCESS_KEY }} \
+            -e AWS_REGION=${{ secrets.LMS_AWS_REGION }} \
+            -e AWS_S3_BUCKET=${{ secrets.LMS_AWS_S3_BUCKET }} \
+            -e AWS_S3_COURSE_THUMBNAIL_PREFIX=${{ secrets.LMS_AWS_S3_COURSE_THUMBNAIL_PREFIX }} \
+            -e RAZORPAY_KEY_ID=${{ secrets.LMS_RAZORPAY_KEY_ID }} \
+            -e RAZORPAY_KEY_SECRET=${{ secrets.LMS_RAZORPAY_KEY_SECRET }} \
+            ${{ secrets.DOCKER_USERNAME }}/bserc-lms-backend:latest
