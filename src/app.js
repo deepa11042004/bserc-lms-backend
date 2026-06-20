@@ -14,6 +14,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const { globalLimiter, authLimiter } = require('./middleware/rateLimiter');
 const swaggerSpec = require('./config/swagger');
 
 const app = express();
@@ -32,6 +33,8 @@ app.use(
 
 app.use(express.json());
 
+app.use(globalLimiter);
+
 app.get('/', (req, res) => {
   res.send('LMS backend API is running');
 });
@@ -43,7 +46,7 @@ app.get('/api-docs.json', (req, res) => {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/api', courseRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api', faqRoutes);
