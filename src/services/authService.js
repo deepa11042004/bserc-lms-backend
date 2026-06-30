@@ -1,5 +1,5 @@
 const { comparePassword, hashPassword } = require('../utils/hashPassword');
-const { signToken } = require('../utils/jwt');
+const { signToken, signRefreshToken } = require('../utils/jwt');
 const roles = require('../constants/roles');
 const userModel = require('../models/userModel');
 const userProfileModel = require('../models/userProfileModel');
@@ -164,13 +164,15 @@ async function login({ email, password, requiredRole }) {
 
   await userModel.updateLastLogin(user.id);
 
-  const token = signToken({ userId: user.id, email: user.email, role: user.role });
+  const token = signToken({ userId: user.id, email: user.email, role: user.role }, '15m');
+  const refreshToken = signRefreshToken({ userId: user.id });
 
   return {
     status: 200,
     body: {
       message: 'Login successful',
       token,
+      refreshToken,
       user: {
         id: user.id,
         full_name: user.full_name,
