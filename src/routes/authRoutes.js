@@ -2,7 +2,6 @@ const express = require('express');
 const multer = require('multer');
 
 const authController = require('../controllers/authController');
-const refreshController = require('../controllers/refreshController');
 const authMiddleware = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/requireRole');
 const roles = require('../constants/roles');
@@ -51,35 +50,6 @@ const avatarUpload = multer({ storage: multer.memoryStorage(), limits: { fileSiz
  */
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-
-/**
- * @openapi
- * /auth/refresh:
- *   post:
- *     tags: [Auth]
- *     summary: Refresh access token using refresh token
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [refreshToken]
- *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: The refresh token obtained from login
- *     responses:
- *       200:
- *         description: Token refreshed successfully
- *       400:
- *         description: Refresh token is required
- *       401:
- *         description: Invalid or expired refresh token
- *       404:
- *         description: User not found
- */
-router.post('/refresh', refreshController.refreshAccessToken);
 
 /**
  * @openapi
